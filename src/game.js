@@ -10,6 +10,7 @@ import { CATEGORIES, emptyWorld, normalizeParams, seedWorld, simulateTick } from
 import {
   defaultState, deleteSlot, exportState, importState, listSaves, loadSettings, loadSlot, saveSettings, saveSlot,
 } from './save.js';
+import { spawnDeco } from './decos.js';
 import { buildArena, buildCustom, buildGiants, buildInverted, buildZero } from './worlds.js';
 import { mountUI } from './ui.js';
 
@@ -86,6 +87,7 @@ export class Game {
     this.creatures = [];
     this.props = [];
     this.built = [];
+    this.spins = [];
     this.ui = mountUI(this);
     this.resize();
     window.addEventListener('resize', () => this.resize());
@@ -138,6 +140,7 @@ export class Game {
     } else if (this.mode === 'title' || this.mode === 'intro') {
       this.playerMesh.visible = false;
     }
+    this.updateDecos(dt);
     if (this.player.hitFlash > 0) this.player.hitFlash = Math.max(0, this.player.hitFlash - dt);
     this.updateCamera(dt);
     this.updatePrompt();
@@ -427,8 +430,14 @@ export class Game {
   }
 
   clearWorld() {
-    this.worldRoot.traverse((obj) => { if (obj.geometry) obj.geometry.dispose(); });
+    this.worldRoot.traverse((obj) => {
+      if (obj.geometry) obj.geometry.dispose();
+      if (!obj.userData?.deco) return;
+      const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+      mats.forEach((mat) => mat?.dispose());
+    });
     this.worldRoot.clear();
+    this.spins = [];
     this.solids = [];
     this.zones = [];
     this.waters = [];
@@ -490,8 +499,10 @@ export class Game {
     const sx = spec.sx, sy = spec.sy, sz = spec.sz;
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), this.material(spec.color || '#888888', spec));
     mesh.position.set(spec.cx, spec.cy, spec.cz);
-    mesh.castShadow = spec.solid !== false && this.settings.quality !== 'low';
-    mesh.receiveShadow = true;
+    const shown = spec.visual !== false;
+    mesh.visible = shown;
+    mesh.castShadow = shown && spec.solid !== false && this.settings.quality !== 'low';
+    mesh.receiveShadow = shown;
     mesh.userData.tag = spec.tag || '';
     this.worldRoot.add(mesh);
     if (spec.solid !== false) {
@@ -507,8 +518,10 @@ export class Game {
   addCylinder(spec) {
     const mesh = new THREE.Mesh(new THREE.CylinderGeometry(spec.rt, spec.rb, spec.h, 7), this.material(spec.color || '#777', {}));
     mesh.position.set(spec.x, spec.y, spec.z);
-    mesh.castShadow = this.settings.quality !== 'low';
-    mesh.receiveShadow = true;
+    const shown = spec.visual !== false;
+    mesh.visible = shown;
+    mesh.castShadow = shown && this.settings.quality !== 'low';
+    mesh.receiveShadow = shown;
     this.worldRoot.add(mesh);
     if (spec.solid) {
       const base = spec.y - spec.h / 2;
@@ -543,6 +556,24 @@ export class Game {
     this.worldRoot.add(light);
   }
 
+  addDeco(name, x, y, z, opt = {}) {
+    const mesh = spawnDeco(name, opt);
+    if (!mesh) return null;
+    mesh.position.set(x, y, z);
+    this.worldRoot.add(mesh);
+    if (opt.spin) this.spins.push({ mesh, speed: opt.spin });
+    return mesh;
+  }
+
+  updateDecos(dt) {
+    for (const item of this.spins) item.mesh.rotation.y += item.speed * dt;
+    for (const pickup of this.pickups) {
+      if (!pickup.mesh || pickup.taken) continue;
+      pickup.mesh.rotation.y += dt * 0.8;
+      pickup.mesh.position.y = pickup.pos[1] + Math.sin(this.time * 2.2 + pickup.pos[0]) * 0.12;
+    }
+  }
+
   addSphere(x, y, z, r, color, emissive) {
     const mesh = new THREE.Mesh(new THREE.SphereGeometry(r, 24, 16), this.material(color, { emissive: color, emissiveIntensity: emissive || 0.1 }));
     mesh.position.set(x, y, z);
@@ -574,7 +605,11 @@ export class Game {
 
   addPickup(spec) {
     if (this.state.picked[spec.id]) return;
-    const mesh = new THREE.Mesh(new THREE.OctahedronGeometry(0.28), this.material(colorOfResource(spec.resource), { emissive: colorOfResource(spec.resource), emissiveIntensity: 0.7 }));
+    const tint = colorOfResource(spec.resource);
+    let mesh = spawnDeco('mote', { tint, scale: spec.kind === 'relic' ? 1.35 : 0.9 });
+    if (!mesh) {
+      mesh = new THREE.Mesh(new THREE.OctahedronGeometry(0.28), this.material(tint, { emissive: tint, emissiveIntensity: 0.7 }));
+    }
     mesh.position.set(spec.x, spec.y, spec.z);
     mesh.visible = !spec.hidden;
     this.worldRoot.add(mesh);
@@ -584,7 +619,10 @@ export class Game {
   addInteract(spec) { this.interacts.push({ ...spec, pos: [spec.x, spec.y, spec.z] }); }
 
   addProp(spec) {
-    const mesh = new THREE.Mesh(new THREE.BoxGeometry(spec.sx, spec.sy, spec.sz), this.material(spec.color || '#ddd', { emissive: '#d9c8a0', emissiveIntensity: 0.15 }));
+    let mesh = spec.role === 'bone' ? spawnDeco('bone', { scale: 1 }) : null;
+    if (!mesh) {
+      mesh = new THREE.Mesh(new THREE.BoxGeometry(spec.sx, spec.sy, spec.sz), this.material(spec.color || '#ddd', { emissive: '#d9c8a0', emissiveIntensity: 0.15 }));
+    }
     mesh.position.set(spec.x, spec.y + spec.sy / 2, spec.z);
     mesh.castShadow = true;
     this.worldRoot.add(mesh);

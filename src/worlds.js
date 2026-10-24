@@ -14,7 +14,8 @@ export function buildZero(game) {
   box(game, 0, 1, -22, 10, 2, 20, '#cfc4b0');
   box(game, 9, 4, -36, 22, 8, 2, '#efe6d4', { emissive: '#d9c8a2', emissiveIntensity: 0.2 });
   box(game, 18, 1, -32, 8, 2, 12, '#d5c7a4', { emissive: '#f2d48a', emissiveIntensity: 0.45 });
-  box(game, 0, 3.2, -2, 1.4, 4.4, 1.4, '#f4efe4', { emissive: '#b9a4ff', emissiveIntensity: 0.55 });
+  box(game, 0, 3.2, -2, 1.4, 4.4, 1.4, '#f4efe4', { visual: false });
+  game.addDeco('monolith', 0, 2, -2);
   box(game, 2, 2.08, -29, 2.2, 0.12, 2.2, '#f6e7a8', { solid: false, emissive: '#ffe08a', emissiveIntensity: 0.8 });
   game.addZone({ id: 'lesson', kind: 'lesson', min: [14, 0.4, -38], max: [22, 6, -26] });
   game.addZone({ id: 'wh', kind: 'whitehole', min: [12, 1.2, -2], max: [17.5, 5, 5] });
@@ -31,17 +32,24 @@ export function buildZero(game) {
   arch(game, 12, 2, 8, '#f0c9a0');
   arch(game, -12, 2, 8, '#8ee7dc');
   arch(game, 0, 2, -8, '#ff8f8f');
+  game.addDeco('console', 0, 2, 16, { yaw: Math.PI });
+  game.addDeco('ring', 14.6, 3.2, 1.2, { scale: 1.15, spin: 0.35 });
+  game.addDeco('rock', 15, 2, -12, { scale: 1.3, yaw: 0.4 });
+  game.addDeco('rock', -13, 2, 11, { scale: 1.6, yaw: 1.2 });
+  game.addDeco('rock', -15, 2, -6, { scale: 0.9, yaw: 2.1 });
+  game.addDeco('ruin', 11, 2, -14, { yaw: 0.6, scale: 0.85 });
   game.addLight(0, 7, -2, '#c8b6ff', 2.2, 18);
   game.addLight(12, 4, 8, '#ffc98a', 1.2, 10);
-  game.addSphere(-70, 28, -90, 16, '#c4553a', 0.15);
-  game.addSphere(80, 18, -70, 8, '#7ee0d6', 0.25);
+  game.addDeco('planet', -70, 28, -90, { scale: 16, body: '#c4553a', spin: 0.05 });
+  game.addDeco('planet', 80, 18, -70, { scale: 8, body: '#7ee0d6', spin: -0.08 });
   game.addStars(700, 200, '#f4efe4');
 }
 
 function arch(game, x, y, z, color) {
-  box(game, x - 1.3, y + 1.6, z, 0.35, 3.2, 0.35, color, { emissive: color, emissiveIntensity: 0.4 });
-  box(game, x + 1.3, y + 1.6, z, 0.35, 3.2, 0.35, color, { emissive: color, emissiveIntensity: 0.4 });
-  box(game, x, y + 3.3, z, 3, 0.35, 0.35, color, { emissive: color, emissiveIntensity: 0.45 });
+  box(game, x - 1.3, y + 1.6, z, 0.35, 3.2, 0.35, color, { visual: false });
+  box(game, x + 1.3, y + 1.6, z, 0.35, 3.2, 0.35, color, { visual: false });
+  box(game, x, y + 3.3, z, 3, 0.35, 0.35, color, { visual: false });
+  game.addDeco('arch', x, y, z, { tint: color });
 }
 
 export function buildGiants(game) {
@@ -58,6 +66,7 @@ export function buildGiants(game) {
   for (let i = 0; i < 7; i++) {
     const top = 2.35 + i * 0.48;
     box(game, -2, top - 0.28, -35 - i * 2.1, 8, 0.56, 2.2, bone);
+    game.addDeco('vertebra', -5.1, top, -35 - i * 2.1, { scale: 1.35, yaw: 0.4 + i * 0.15 });
   }
   box(game, -2, 5, -52, 14, 2, 12, bone);
   box(game, 2, 7, -60, 12, 2, 10, bone);
@@ -66,8 +75,13 @@ export function buildGiants(game) {
   box(game, -62, 1, 22, 22, 2, 22, '#243028');
   const trunks = [[-22, -8], [-30, -22], [-16, -28], [-34, 2], [-8, -36], [8, -8], [-26, -36]];
   trunks.forEach(([x, z], i) => {
-    game.addCylinder({ x, y: 2 + 18, z, rt: 0.6, rb: 2.4, h: 36, color: i % 2 ? '#6a4a32' : '#7b5a3a', solid: true, solidH: 8 });
-    game.addCylinder({ x, y: 2 + 33, z, rt: 7, rb: 2, h: 8, color: '#234026', solid: false });
+    game.addCylinder({ x, y: 2 + 18, z, rt: 0.6, rb: 2.4, h: 36, color: '#6a4a32', solid: true, solidH: 8, visual: false });
+    game.addDeco('tree', x, 2, z, {
+      scale: 3.55,
+      yaw: i * 0.8,
+      leaf: ruined ? '#3e4634' : '#1d5a30',
+      trunk: ruined ? '#4a3b30' : '#6a4a32',
+    });
   });
   game.addZone({ id: 'silence', kind: 'silence', min: [-74, 0, 10], max: [-50, 8, 34] });
   game.addZone({ id: 'grass', kind: 'stealth', min: [-36, 1.5, -34], max: [-10, 6, -6] });
@@ -101,7 +115,8 @@ export function buildGiants(game) {
   if (game.state.flags.harvesterAlive) {
     game.addCreature({ species: 'harvester', x: 40, y: 2, z: -44, scale: 1.7 });
     game.addProp({ id: 'bone', x: 49, y: 3.15, z: -44, sx: 2.8, sy: 2.2, sz: 2.4, color: '#efe4d0', dynamic: true, role: 'bone' });
-    box(game, 49, 2.55, -44, 3, 1.1, 3, '#b7aa96');
+    box(game, 49, 2.55, -44, 3, 1.1, 3, '#b7aa96', { visual: false });
+    game.addDeco('ruin', 49, 2, -44, { scale: 0.55, yaw: 0.3 });
   } else {
     box(game, 40, 2.6, -44, 4, 1.2, 4, '#2a2422');
   }
@@ -113,9 +128,20 @@ export function buildGiants(game) {
     game.addCreature({ species: 'lucane', x, y: 2, z, scale: 1, home: [x, z] });
   });
   [[-20, 6, -14], [-26, 7, -26], [-12, 5, -20]].forEach(([x, y, z]) => game.addCreature({ species: 'spore', x, y, z, scale: 1.4 }));
+  [[-22, -14], [-30, -20], [-16, -26], [-26, -8], [-12, -18]].forEach(([x, z], i) => {
+    game.addDeco('fern', x, 2, z, { scale: 2.6 + (i % 3) * 0.45, yaw: i * 1.1, leaf: ruined ? '#4a5538' : '#2f7a32' });
+  });
+  [[18, 8], [-40, 6], [44, -28], [-6, 20]].forEach(([x, z], i) => {
+    game.addDeco('rock', x, 2, z, { scale: 2.1 + i * 0.35, yaw: i });
+  });
+  if (!ruined) {
+    game.addDeco('ruin', 26, 2, -16, { yaw: 0.8 });
+    game.addDeco('ruin', 40, 2, -18, { yaw: 2.2, scale: 0.8 });
+  }
+  game.addDeco('ring', 14, 3.4, 34, { scale: 0.8, spin: 0.3 });
   game.addLight(-20, 12, -16, '#ffd27a', 1.4, 28);
   game.addLight(36, 8, -28, ruined ? '#663322' : '#ffb060', 1.3, 24);
-  game.addSphere(-90, 40, -40, 22, '#f2d2a4', 0.05);
+  game.addDeco('planet', -90, 40, -40, { scale: 22, body: '#f2d2a4', spin: 0.04 });
   game.addStars(400, 180, '#fff1d6');
 }
 
@@ -167,12 +193,12 @@ export function buildInverted(game) {
   game.addInteract({ id: 'echo', x: 2, y: 8.4, z: 36, radius: 2.6, label: 'Parler à l’écho', fn: (g) => g.talkEcho() });
   game.addInteract({ id: 'back', x: 0, y: 8.6, z: 11, radius: 2.6, label: 'Retour au Point Zéro', fn: (g) => g.travel('zero') });
   arch(game, 0, 8, 11, '#8ee7dc');
-  marker(game, 0, 8.15, -8, '#f2d48a');
-  marker(game, -10, 43.1, 2, '#7ee0ff');
-  marker(game, 27.2, 26, 8, '#ff8ad8');
+  marker(game, 0, 8, -8, '#f2d48a');
+  game.addDeco('shrine', -10, 44, 2, { tint: '#7ee0ff', scale: 0.85, rx: Math.PI });
+  game.addDeco('shrine', 28, 26, 8, { tint: '#ff8ad8', scale: 0.85, rz: Math.PI / 2 });
   box(game, 2, 8.4, 36, 0.6, 1.2, 0.6, '#8fd0ff', { solid: false, emissive: '#8fd0ff', emissiveIntensity: 1.2 });
   if (!game.state.flags.fusionCalmed) {
-    game.addCylinder({ x: 19, y: 30, z: -16, rt: 0.4, rb: 1.2, h: 10, color: '#e7dcc8', solid: false });
+    game.addDeco('bone', 19, 30, -16, { scale: 1.4, yaw: 0.6, spin: 0.2 });
   }
   game.addCreature({ species: 'sera', x: 27.2, y: 18, z: 16, scale: 1 });
   game.addCreature({ species: 'ivo', x: -20, y: 8, z: 16, scale: 1 });
@@ -187,16 +213,26 @@ export function buildInverted(game) {
   if (game.state.flags.city === 'exploited') {
     [[26.5, 12, 18], [26.8, 20, 10], [26.4, 24, 24]].forEach(([x, y, z]) => game.addCreature({ species: 'drone', x, y, z, scale: 1 }));
   }
+  [[2, 24, -4], [-4, 28, 2], [5, 33, -6], [-2, 18, 3]].forEach(([x, y, z], i) => {
+    game.addDeco('coral', x, y, z, { scale: 1.3 + (i % 2) * 0.4, yaw: i, tint: i % 2 ? '#7ee0ff' : '#ff8ad4' });
+  });
+  [[-8, 8, 4], [6, 8, -6], [-4, 8, 10]].forEach(([x, y, z], i) => {
+    game.addDeco('crystal', x, y, z, { scale: 0.7 + i * 0.15, yaw: i, tint: '#9fd8ff' });
+  });
+  [[-6, 44, -6], [4, 44, 2], [-12, 44, 6]].forEach(([x, y, z], i) => {
+    game.addDeco('crystal', x, y, z, { scale: 1.1, yaw: i, rx: Math.PI, tint: '#7ee0ff' });
+  });
+  game.addDeco('bell', -20, 13.4, 23.05, { scale: 1.3 });
   game.addLight(0, 12, 0, '#7ee0d6', 1.6, 26);
   game.addLight(0, 40, -4, '#3de0ff', 1.8, 24);
   game.addLight(30, 20, 12, '#ff4fa3', 1.3, 18);
-  game.addSphere(60, 50, -40, 14, '#ff5ea8', 0.2);
-  game.addSphere(-50, -20, -30, 10, '#7ee0ff', 0.3);
+  game.addDeco('planet', 60, 50, -40, { scale: 14, body: '#ff5ea8', spin: 0.06 });
+  game.addDeco('planet', -50, -20, -30, { scale: 10, body: '#7ee0ff', spin: -0.05 });
   game.addStars(600, 190, '#d7d4ff');
 }
 
 function marker(game, x, y, z, color) {
-  box(game, x, y, z, 1.2, 0.15, 1.2, color, { solid: false, emissive: color, emissiveIntensity: 0.9 });
+  game.addDeco('shrine', x, y, z, { tint: color, scale: 0.9 });
 }
 
 export function buildArena(game) {
@@ -209,8 +245,11 @@ export function buildArena(game) {
   box(game, -14, 1, 6, 8, 2, 8, '#3a1c20', { tag: 'plate-1' });
   box(game, 0, 1, -14, 10, 2, 8, '#3a1c20', { tag: 'plate-2' });
   game.bossPlates = ['plate-0', 'plate-1', 'plate-2'];
+  [[12, 8], [-12, 10], [4, -12], [-6, 12]].forEach(([x, z], i) => {
+    game.addDeco('ruin', x, 2, z, { scale: 0.7 + (i % 2) * 0.25, yaw: i * 0.7 });
+  });
   game.addLight(0, 10, 0, '#ffb0a8', 2, 30);
-  game.addSphere(0, 30, -20, 7, '#ff5a4a', 0.4);
+  game.addDeco('planet', 0, 30, -20, { scale: 7, body: '#ff5a4a', spin: 0.12 });
   game.queueBoss = true;
 }
 
@@ -239,7 +278,10 @@ export function buildCustom(game, world) {
     box(game, -6, 1.5, 4, ext * 0.6, 1.2, 5, '#e6c27e');
   } else if (p.terrain === 'cristaux') {
     for (let i = 0; i < 6; i++) {
-      game.addCylinder({ x: Math.cos(i) * ext * 0.4, y: 3, z: Math.sin(i * 1.7) * ext * 0.4, rt: 0.2, rb: 0.8, h: 4 + (i % 3), color: '#d5e4ff', solid: true, solidH: 4 });
+      const x = Math.cos(i) * ext * 0.4;
+      const z = Math.sin(i * 1.7) * ext * 0.4;
+      game.addCylinder({ x, y: 3, z, rt: 0.2, rb: 0.8, h: 4 + (i % 3), color: '#d5e4ff', solid: true, solidH: 4, visual: false });
+      game.addDeco('crystal', x, 1.4, z, { scale: 0.9 + (i % 3) * 0.35, yaw: i, tint: '#d5e4ff' });
     }
   }
   if (p.water > 20) {
@@ -259,15 +301,16 @@ export function buildCustom(game, world) {
       amount: 1,
     });
   }
+  for (let i = 0; i < 4; i++) {
+    game.addDeco('rock', Math.cos(i * 1.7) * ext * 0.28, 1.4, Math.sin(i * 2.1) * ext * 0.28, { scale: 0.8 + (i % 2) * 0.4, yaw: i });
+  }
   const trees = Math.round(p.vegetation / 12);
   for (let i = 0; i < trees; i++) {
     const a = i * 2.3;
-    game.addCylinder({
-      x: Math.cos(a) * ext * 0.45,
-      y: 4,
-      z: Math.sin(a) * ext * 0.4,
-      rt: 0.2, rb: 0.45, h: 4, color: '#3e5a32', solid: true, solidH: 4,
-    });
+    const x = Math.cos(a) * ext * 0.45;
+    const z = Math.sin(a) * ext * 0.4;
+    game.addCylinder({ x, y: 4, z, rt: 0.2, rb: 0.45, h: 4, color: '#3e5a32', solid: true, solidH: 4, visual: false });
+    game.addDeco('tree', x, 1.4, z, { scale: 0.48, yaw: a });
   }
   game.addInteract({ id: 'leave-custom', x: 0, y: 2.6, z: ext * 0.35 + 2, radius: 2.5, label: 'Revenir au Point Zéro', fn: (g) => g.travel('zero') });
   arch(game, 0, 2, ext * 0.35 + 2, '#d7e7c4');

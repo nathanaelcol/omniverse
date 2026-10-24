@@ -1,6 +1,9 @@
 import './style.css';
+import { preloadDecos } from './decos.js';
 import { Game } from './game.js';
 
 const canvas = document.querySelector('#view');
-const game = new Game(canvas);
-game.start();
+preloadDecos().then(() => {
+  const game = new Game(canvas);
+  game.start();
+});
